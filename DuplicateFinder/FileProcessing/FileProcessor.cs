@@ -28,17 +28,17 @@ namespace DuplicateFinder.FileProcessing
 
                 AddSubDirectoriesToListOfDirectoriesToBeProcessed(currentDir, directoriesToBeProcessed);
 
-                string[] files = _iOHelper.GetFilesInDirectory(currentDir);
+                string[] filePaths = _iOHelper.GetFilesInDirectory(currentDir);
 
-                foreach(var filePath in files)
+                for(var index = 0; index < filePaths.Length; index++)
                 {
                     try
                     {
-                        AddFileToGroupedCollection(filePath);
+                        AddFileToGroupedCollection(filePaths[index]);
                     }
                     catch (Exception ex)
                     {
-                        ErrorsProcessingFiles.AppendLine($"Error occured processing file {filePath}: {ex.Message}");
+                        ErrorsProcessingFiles.AppendLine($"Error occured processing file {filePaths[index]}: {ex.Message}");
                     }
                 }
             }
@@ -81,13 +81,11 @@ namespace DuplicateFinder.FileProcessing
         private string GetHashForFile(string file)
         {
             var fileAsBytes = _iOHelper.ReadBytesForFile(file);
-            string hash;
 
             using (SHA1CryptoServiceProvider sha1 = new SHA1CryptoServiceProvider())
             {
-                hash = Convert.ToBase64String(sha1.ComputeHash(fileAsBytes));
+                return Convert.ToBase64String(sha1.ComputeHash(fileAsBytes));
             }
-            return hash;
         }
     }
 }

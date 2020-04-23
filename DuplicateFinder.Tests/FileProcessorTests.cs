@@ -9,28 +9,20 @@ using Xunit;
 
 namespace DuplicateFinder.Tests
 {
-    public class FileProcessorTests : IDisposable
+    public class FileProcessorTests
     {
         private readonly string TestDirectory = "test/directory";
         private readonly Mock<IIOHelper> _iOHelper = new Mock<IIOHelper>();
         private StringBuilder ErrorsStub = new StringBuilder();
         private FileProcessor sut;
 
-        public FileProcessorTests()
-        {
-        }
-
-        public void Dispose()
-        {
-        }
-
         [Fact]
         public void GroupAllFilesInDirectoryWithAnyDuplicates_ShouldThrowArgumentExceptionAndReturnError_WhenDirectoryDoesNotExist()
         {
-            sut = new FileProcessor(_iOHelper.Object);
-            _iOHelper.Setup(i => i.DirectoryExists(TestDirectory)).Returns(false);
+            SetupDirectoryDoesNotExist();
 
             var messageToPrint = Assert.Throws<ArgumentException>(() => sut.GroupAllFilesInDirectoryWithAnyDuplicates(TestDirectory, out ErrorsStub));
+
             Assert.Equal($"The directory '{TestDirectory}' does not exist.", messageToPrint.Message);
         }
 
@@ -80,6 +72,11 @@ namespace DuplicateFinder.Tests
         }
 
         [Fact]
+        public void GroupAllFilesInDirectoryWithAnyDuplicates_ShouldGroup_WhenDirectoryHasEquivalentFilesWithSameName()
+        {
+        }
+
+        [Fact]
         public void GroupAllFilesInDirectoryWithAnyDuplicates_ShouldReturnError_WhenFileBeingComparedHasBeenDeleted()
         {
         }
@@ -91,6 +88,11 @@ namespace DuplicateFinder.Tests
 
         [Fact]
         public void GroupAllFilesInDirectoryWithAnyDuplicates_ShouldReturnError_WhenIOExceptionOccursWhenAccessingFile()
+        {
+        }
+
+        [Fact]
+        public void GroupAllFilesInDirectoryWithAnyDuplicates_ShouldReturnEmpty_WhenDirectoryHasNoFiles()
         {
         }
 
@@ -119,12 +121,18 @@ namespace DuplicateFinder.Tests
         #endregion Verification Helpers
 
         #region Setup Helpers
+        private void SetupDirectoryDoesNotExist()
+        {
+            sut = new FileProcessor(_iOHelper.Object);
+            _iOHelper.Setup(i => i.DirectoryExists(TestDirectory)).Returns(false);
+        }
+
         private string[] SetupSameFileNameDifferentContents()
         {
             SetupSubjectUnderTest();
 
             SetupForNoSubDirectories();
-            var testFiles = FilesOfSameName();
+            var testFiles = SetupAndReturn2FileNamesThatAreTheSame();
             ReturnDifferentByteArrays(testFiles);
 
             return testFiles;
@@ -196,7 +204,9 @@ namespace DuplicateFinder.Tests
             _iOHelper.Setup(i => i.DirectoryExists(TestDirectory)).Returns(true);
             _iOHelper.Setup(i => i.GetSubDirectories(TestDirectory)).Returns(new string[0]);
         }
+        #endregion
 
+        #region Setup Stubs
         private string[] FilesOfSameName()
         {
             var fileName = "TestFile";
@@ -227,6 +237,6 @@ namespace DuplicateFinder.Tests
                 new byte[] { 0x00, 0x04, 0x02, 0x03 }
             };
         }
-        #endregion Setup Helpers
+        #endregion
     }
 }

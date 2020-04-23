@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
@@ -27,7 +26,7 @@ namespace DuplicateFinder.Tests
         [Fact]
         public void GroupFilesByMultiples_ShouldReturnGrouping_WhenDuplicatesFoundAndNoErrors()
         {
-            _fileProcessor.Setup(i => i.GroupAllFilesInDirectoryWithAnyDuplicates(TestDirectory, out errorsProcessingFiles)).Returns(GetFilesWithDuplicates());
+            SetupFileProcessorToReturnFiles(GetFilesWithDuplicates(), withErrors: false);
 
             var messageToPrint = sut.GroupFilesByMultiples(TestDirectory);
 
@@ -38,7 +37,7 @@ namespace DuplicateFinder.Tests
         [Fact]
         public void GroupFilesByMultiples_ShouldReturnUngrouped_WhenNoDuplicatesFoundAndNoErrors()
         {
-            _fileProcessor.Setup(i => i.GroupAllFilesInDirectoryWithAnyDuplicates(TestDirectory, out errorsProcessingFiles)).Returns(GetFilesWithNoDuplicates());
+            SetupFileProcessorToReturnFiles(GetFilesWithNoDuplicates(), withErrors: false);
 
             var messageToPrint = sut.GroupFilesByMultiples(TestDirectory);
 
@@ -48,8 +47,7 @@ namespace DuplicateFinder.Tests
         [Fact]
         public void GroupFilesByMultiples_ShouldReturnGroupingPlusErrors_WhenDuplicatesFoundAndErrorsFound()
         {
-            errorsProcessingFiles.Append("Error occured with one of the files");
-            _fileProcessor.Setup(i => i.GroupAllFilesInDirectoryWithAnyDuplicates(TestDirectory, out errorsProcessingFiles)).Returns(GetFilesWithDuplicates());
+            SetupFileProcessorToReturnFiles(GetFilesWithDuplicates(), withErrors: true);
 
             var messageToPrint = sut.GroupFilesByMultiples(TestDirectory);
 
@@ -60,8 +58,7 @@ namespace DuplicateFinder.Tests
         [Fact]
         public void GroupFilesByMultiples_ShouldReturnJustErrors_WhenErrorsOccurButNoDuplicatesFound()
         {
-            errorsProcessingFiles.Append("Error occured with one of the files");
-            _fileProcessor.Setup(i => i.GroupAllFilesInDirectoryWithAnyDuplicates(TestDirectory, out errorsProcessingFiles)).Returns(GetFilesWithNoDuplicates());
+            SetupFileProcessorToReturnFiles(GetFilesWithNoDuplicates(), withErrors: true);
 
             var messageToPrint = sut.GroupFilesByMultiples(TestDirectory);
 
@@ -70,6 +67,13 @@ namespace DuplicateFinder.Tests
         }
 
         #region Setup Helplers/Stubs
+        private void SetupFileProcessorToReturnFiles(ConcurrentDictionary<string, List<string>> files, bool withErrors)
+        {
+            if (withErrors) errorsProcessingFiles.Append("Error occured with one of the files");
+
+            _fileProcessor.Setup(i => i.GroupAllFilesInDirectoryWithAnyDuplicates(TestDirectory, out errorsProcessingFiles)).Returns(files);
+        }
+
         private ConcurrentDictionary<string, List<string>> GetFilesWithDuplicates()
         {
             return new ConcurrentDictionary<string, List<string>>
